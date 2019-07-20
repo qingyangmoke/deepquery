@@ -8,7 +8,7 @@ const config = require('./webpack.dev.config');
 // 压缩版
 const minConfig = merge(config, {
   output: {
-    filename: `${pkg.name}.js`,
+    filename: `index.js`,
   },
   plugins: [
     new webpack.optimize.UglifyJsPlugin({

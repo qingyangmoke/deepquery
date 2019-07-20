@@ -7,21 +7,20 @@ const banner = `${pkg.name}
 Description: ${pkg.description}
 Author: ${pkg.author}
 Version: v${pkg.version}
-Github: ${pkg.repository.url}`
-  ;
+Github: ${pkg.repository.url}`;
 
 const DEV = process.env.NODE_ENV === 'development'
 
 const config = {
   entry: {
-    'DeepQuery': [path.resolve(__dirname, '../src/index.js')]
+    'deepQuery': [path.resolve(__dirname, '../src/index.js')]
   },
   output: {
     path: path.resolve(__dirname, '../dist'),
-    // publicPath: path.resolve(__dirname, '../dist'),
-    filename: `${pkg.name}.debug.js`,
+    filename: `index.debug.js`,
     libraryTarget: 'umd',
     library: ['[name]'],
+    globalObject: 'typeof self !== \'undefined\' ? self : this',
   },
   plugins: [
     new webpack.BannerPlugin(banner),

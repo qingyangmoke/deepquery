@@ -7,14 +7,12 @@ const copy = require('copy');
 const chalk = require('chalk');
 const webpack = require('webpack');
 
-const configDev = require('../config/webpack.dev.config');
-const config = require('../config/webpack.config');
+const configProd = require('../config/webpack.config');
 const pkg = require('../package.json');
 const rootPath = path.resolve(__dirname, '../');
-const buildPath = path.resolve(rootPath, 'publish');
-const distPath = path.resolve(rootPath, 'publish');
+const publishPath = path.resolve(rootPath, 'publish');
+const distPath = path.resolve(rootPath, 'dist');
 const srcPath = path.resolve(rootPath, 'src');
-const typesPath = path.resolve(rootPath, 'types');
 
 
 const newPackage = {
@@ -26,8 +24,8 @@ const newPackage = {
   repository: pkg.repository,
   main: `index.js`,
   scripts: {},
-  types: 'types/tween.d.ts',
   license: pkg.license,
+  "typings": "index.d.ts",
   bugs: pkg.bugs,
   homepage: pkg.homepage,
 };
@@ -37,20 +35,54 @@ const building = ora('building...\n\n');
 building.start();
 
 new Promise((resolve, reject) => {
-  console.log(chalk.cyan(`## clear dist directory ...\n\n`));
-  rm(path.resolve(buildPath, `*`), err => {
-    if (err) {
-      reject(err);
-      return;
-    };
-    resolve();
-  });
-  console.log(chalk.green(`  clear complete\n\n`));
-})
+    console.log(chalk.cyan(`## clear dist directory ...\n\n`));
+    rm(path.resolve(distPath, `*`), err => {
+      if (err) {
+        reject(err);
+        return;
+      };
+      resolve();
+    });
+    console.log(chalk.green(`  clear complete\n\n`));
+  })
+  .then(() => {
+    return new Promise((resolve, reject) => {
+      console.log(chalk.cyan(`## clear publish directory ...\n\n`));
+      rm(path.resolve(publishPath, `*`), err => {
+        if (err) {
+          reject(err);
+          return;
+        };
+        resolve();
+      });
+      console.log(chalk.green(`  clear complete\n\n`));
+    });
+  })
+  .then(() => {
+    return new Promise((resolve, reject) => {
+      console.log(chalk.cyan('## webpack building... \n'));
+      webpack(configProd, function (err, stats) {
+        if (err) {
+          reject(err);
+          return;
+        };
+        building.stop();
+        process.stdout.write(stats.toString({
+          colors: true,
+          modules: false,
+          children: false,
+          chunks: false,
+          chunkModules: false,
+        }) + '\n\n');
+        console.log(chalk.green('  webpack Build complete.\n'));
+        resolve();
+      });
+    });
+  })
   .then(() => {
     return new Promise((resolve, reject) => {
       console.log(chalk.cyan('## copy LICENSE\n'));
-      copy(`${rootPath}/LICENSE`, distPath, function (err, files) {
+      copy(`${rootPath}/LICENSE`, publishPath, function (err, files) {
         if (err) {
           reject(err);
           return;
@@ -63,7 +95,7 @@ new Promise((resolve, reject) => {
   .then(() => {
     return new Promise((resolve, reject) => {
       console.log(chalk.cyan('## copy README.md\n'));
-      copy(`${rootPath}/README.md`, distPath, function (err, files) {
+      copy(`${rootPath}/README.md`, publishPath, function (err, files) {
         if (err) {
           reject(err);
           return;
@@ -75,7 +107,20 @@ new Promise((resolve, reject) => {
   })
   .then(() => {
     return new Promise((resolve, reject) => {
-      copy(path.resolve(srcPath, `*.js`), distPath, function (err, files) {
+      console.log(chalk.cyan('## copy index.d.ts\n'));
+      copy(`${rootPath}/index.d.ts`, publishPath, function (err, files) {
+        if (err) {
+          reject(err);
+          return;
+        };
+        resolve();
+        console.log(chalk.green('  copying index.d.ts complete.\n'));
+      });
+    });
+  })
+  .then(() => {
+    return new Promise((resolve, reject) => {
+      copy(path.resolve(distPath, `*.js`), publishPath, function (err, files) {
         if (err) {
           reject(err);
           return;
@@ -87,7 +132,7 @@ new Promise((resolve, reject) => {
   })
   .then(() => {
     console.log(chalk.cyan('## write package.json\n'));
-    fs.writeFileSync(path.resolve(distPath, 'package.json'), JSON.stringify(newPackage), {
+    fs.writeFileSync(path.resolve(publishPath, 'package.json'), JSON.stringify(newPackage), {
       flag: 'w',
       encoding: 'utf8',
     });
