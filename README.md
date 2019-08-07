@@ -41,8 +41,8 @@ import deepQuery from 'deepquery';
  deepQuery(obj, "b", "d") || ''; // ==> '' 
  
  // 支持数组索引
- deepQuery(obj, "b", "items", 0, 'name'); // ==> item1
- deepQuery(obj, "b", "items", 1, 'name') || ''; // ==> ''
+ deepQuery(obj, "items", 0, 'name'); // ==> item1
+ deepQuery(obj, "items", 1, 'name') || ''; // ==> ''
  
  // 对象是undefined
  const objUndefined;
